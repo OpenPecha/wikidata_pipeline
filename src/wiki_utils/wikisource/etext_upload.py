@@ -112,7 +112,7 @@ def log_upload_result(
                 [
                     "timestamp",
                     "index_title",
-                    "page_no",
+                    "page_number",
                     "page_title",
                     "status",
                     "error_message",
