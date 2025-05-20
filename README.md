@@ -8,8 +8,8 @@
   <br>
 </h1>
 
-## _Wikidata Pipeline_
-_The project name should match its code's capability so that new users can easily understand what it does._
+## _Wiki Utils_
+_A collection of utilities for working with Wikimedia projects, including Commons and Wikidata uploads._
 
 ## Owner(s)
 
@@ -35,9 +35,9 @@ _Change to the owner(s) of the new repo. (This template's owners are:)_
 ## Project description
 _Use one of these:_
 
-With _Project Name_ you can _verb_ _noun_...
+With _Wiki Utils_ you can upload and manage Tibetan Buddhist texts and related files on Wikimedia Commons and Wikidata.
 
-_Project Name_ helps you _verb_ _noun_...
+_Wiki Utils_ helps you automate Wikimedia uploads, add metadata, and manage Tibetan content with ease.
 
 
 ## Who this project is for
