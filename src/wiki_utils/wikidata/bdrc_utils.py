@@ -14,7 +14,15 @@ def get_qid(work_id):
     }}
     """
     url = "https://query.wikidata.org/sparql"
-    headers = {"Accept": "application/json"}
+    # Add a proper User-Agent header following Wikimedia's policy
+    # See: https://meta.wikimedia.org/wiki/User-Agent_policy
+    user_agent = (
+        "OpenPecha/1.0 "
+        "(https://github.com/OpenPecha/wikidata_pipeline; "
+        "openpecha.dev@gmail.com) "
+        "python-requests/2.32.3"
+    )
+    headers = {"Accept": "application/json", "User-Agent": user_agent}
     try:
         response = requests.get(
             url, params={"query": query}, headers=headers, timeout=10
@@ -37,8 +45,16 @@ def get_wikidata_entity(qid):
     If not found, returns None.
     """
     url = f"https://www.wikidata.org/wiki/Special:EntityData/{qid}.json"
+    # Add a proper User-Agent header following Wikimedia's policy
+    user_agent = (
+        "OpenPecha/1.0 "
+        "(https://github.com/OpenPecha/wikidata_pipeline; "
+        "openpecha.dev@gmail.com) "
+        "python-requests/2.32.3"
+    )
+    headers = {"Accept": "application/json", "User-Agent": user_agent}
     try:
-        response = requests.get(url, timeout=10)
+        response = requests.get(url, headers=headers, timeout=10)
         response.raise_for_status()
         return response.json()
     except Exception as e:
@@ -56,9 +72,15 @@ def extract_useful_fields_from_entity(entity_json, qid, language="en", propertie
         label = entity.get("labels", {}).get(language, {}).get("value", "")
         description = entity.get("descriptions", {}).get(language, {}).get("value", "")
         aliases = [a["value"] for a in entity.get("aliases", {}).get(language, [])]
-        result = {"label": label, "description": description, "aliases": aliases}
+        result = {
+            "qid": qid,
+            "label": label,
+            "description": description,
+            "aliases": aliases,
+        }
         # Extract specified properties if provided
         if properties:
+            result["properties"] = {}
             claims = entity.get("claims", {})
             for prop in properties:
                 prop_values = []
@@ -72,7 +94,7 @@ def extract_useful_fields_from_entity(entity_json, qid, language="en", propertie
                             prop_values.append(value["id"])
                         else:
                             prop_values.append(value)
-                result[prop] = prop_values
+                result["properties"][prop] = prop_values
         return result
     except Exception as e:
         print(f"Error extracting fields from entity for QID {qid}: {e}")
