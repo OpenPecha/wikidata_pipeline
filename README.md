@@ -8,8 +8,8 @@
   <br>
 </h1>
 
-## _Project Name_
-_The project name should match its code's capability so that new users can easily understand what it does._
+## _Wiki Utils_
+_A collection of utilities for working with Wikimedia projects, including Commons and Wikidata uploads._
 
 ## Owner(s)
 
@@ -35,9 +35,9 @@ _Change to the owner(s) of the new repo. (This template's owners are:)_
 ## Project description
 _Use one of these:_
 
-With _Project Name_ you can _verb_ _noun_...
+With _Wiki Utils_ you can upload and manage Tibetan Buddhist texts and related files on Wikimedia Commons and Wikidata.
 
-_Project Name_ helps you _verb_ _noun_...
+_Wiki Utils_ helps you automate Wikimedia uploads, add metadata, and manage Tibetan content with ease.
 
 
 ## Who this project is for
@@ -56,16 +56,16 @@ Get started with _Project Name_ by _(write the first step a user needs to start 
 
 
 ### Install _Project Name_
-1. _Write the step here._ 
+1. _Write the step here._
 
-    _Explanatory text here_ 
-    
+    _Explanatory text here_
+
     _(Optional: Include a code sample or screenshot that helps your users complete this step.)_
 
 2. _Write the step here._
- 
-    a. _Substep 1_ 
-    
+
+    a. _Substep 1_
+
     b. _Substep 2_
 
 
