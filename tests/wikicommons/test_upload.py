@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from wiki_utils.wikicommons.batch_upload import (
+from wiki_utils.wikicommons.upload import (
     assign_categories,
     assign_license,
     login_to_commons,
