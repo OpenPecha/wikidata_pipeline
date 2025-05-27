@@ -1,5 +1,5 @@
-# Import key functions from batch_upload for backward compatibility
-from .batch_upload import (
+# Import key functions from upload for backward compatibility
+from .upload import (
     assign_caption,
     assign_categories,
     assign_license,

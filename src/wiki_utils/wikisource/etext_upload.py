@@ -4,7 +4,7 @@ import json
 import os
 import re
 from datetime import datetime
-from typing import Optional
+from typing import Dict, Optional
 
 import pandas as pd
 import pywikibot
@@ -16,7 +16,7 @@ FAMILY = "wikisource"  # Do not change unless using a non-standard Wikisource
 
 
 # --- Helper Functions ---
-def parse_text_file(text_file_path):
+def parse_text_file(text_file_path: str) -> Dict[str, str]:
     """
     Parse the text file into a dict: {page_number: text}
     Assumes format:
@@ -48,7 +48,9 @@ def parse_text_file(text_file_path):
     return page_texts
 
 
-def get_page_titles(index_title, site):
+def get_page_titles(
+    index_title: str, site: pywikibot.Site
+) -> Dict[str, "pywikibot.proofreadpage.ProofreadPage"]:
     """
     Returns a dict of {page_number: ProofreadPage object}.
     Caches the mapping {page_number: page_title} in a local file for faster reuse.
