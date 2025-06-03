@@ -1,7 +1,5 @@
 import pywikibot
 
-from wiki_utils.wikidata import login_to_wikidata
-
 
 def login_to_wikipedia(lang: str = "en") -> pywikibot.Site:
     """
@@ -16,6 +14,19 @@ def login_to_wikipedia(lang: str = "en") -> pywikibot.Site:
     site = pywikibot.Site(lang, "wikipedia")
     site.login()  # Log into Wikipedia
     print(f"Logged in to {lang} Wikipedia as {site.username()}")
+    return site
+
+
+def login_to_wikidata() -> pywikibot.Site:
+    """
+    Logs in to Wikidata using Pywikibot.
+
+    Returns:
+    - site: Pywikibot Site object for Wikidata.
+    """
+    site = pywikibot.Site("wikidata", "wikidata")
+    site.login()  # Log into Wikidata
+    print(f"Logged in to Wikidata as {site.username()}")
     return site
 
 
