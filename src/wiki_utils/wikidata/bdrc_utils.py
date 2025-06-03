@@ -1,6 +1,20 @@
 import json
 
+import pywikibot
 import requests
+
+
+def login_to_wikidata() -> pywikibot.Site:
+    """
+    Logs in to Wikidata using Pywikibot.
+
+    Returns:
+    - site: Pywikibot Site object for Wikidata.
+    """
+    site = pywikibot.Site("wikidata", "wikidata")
+    site.login()  # Log into Wikidata
+    print(f"Logged in to Wikidata as {site.username()}")
+    return site
 
 
 def get_qid(work_id):

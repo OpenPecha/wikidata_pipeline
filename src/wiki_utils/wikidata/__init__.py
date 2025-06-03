@@ -4,4 +4,5 @@ from .bdrc_utils import (
     get_qid,
     get_wikidata_entity,
     get_wikidata_metadata,
+    login_to_wikidata,
 )
