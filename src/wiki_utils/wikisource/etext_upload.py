@@ -15,6 +15,17 @@ SITE_CODE = "mul"  # 'mul' is for multilingual Wikisource (wikisource.org)
 FAMILY = "wikisource"  # Do not change unless using a non-standard Wikisource
 
 
+def login_to_wikisource() -> pywikibot.Site:
+    """
+    Logs in to Wikisource using Pywikibot.
+    Returns:
+    - site: Pywikibot Site object for Wikisource.
+    """
+    site = pywikibot.Site(SITE_CODE, FAMILY)
+    site.login()  # Log into Wikisource
+    return site
+
+
 # --- Helper Functions ---
 def parse_text_file(text_file_path: str) -> Dict[str, str]:
     """
@@ -167,8 +178,7 @@ def batch_upload_from_csv(
 ) -> None:
     """Upload texts for all entries in a CSV file"""
     if site is None:
-        site = pywikibot.Site(SITE_CODE, FAMILY)
-        site.login()
+        site = login_to_wikisource()
 
     df = pd.read_csv(csv_file_path)
     for i, row in df.iterrows():
