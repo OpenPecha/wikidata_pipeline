@@ -5,3 +5,4 @@ from .etext_upload import (
     parse_text_file,
     upload_texts,
 )
+from .mainpage_extended_text_upload import create_main_page, prepare_wikisource_content

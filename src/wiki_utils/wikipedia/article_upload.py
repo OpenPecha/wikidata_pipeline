@@ -1,7 +1,12 @@
 import pywikibot
 
+from wiki_utils.utils.logger import get_logger
 
-def login_to_wikipedia(lang: str = "en") -> pywikibot.Site:
+# Initialize the logger
+logger = get_logger(__name__)
+
+
+def login_to_wikipedia(lang: str = "bo") -> pywikibot.Site:
     """
     Logs in to Wikipedia using Pywikibot.
 
@@ -13,7 +18,7 @@ def login_to_wikipedia(lang: str = "en") -> pywikibot.Site:
     """
     site = pywikibot.Site(lang, "wikipedia")
     site.login()  # Log into Wikipedia
-    print(f"Logged in to {lang} Wikipedia as {site.username()}")
+    logger.info(f"Logged in to {lang} Wikipedia as {site.username()}")
     return site
 
 
@@ -26,7 +31,7 @@ def login_to_wikidata() -> pywikibot.Site:
     """
     site = pywikibot.Site("wikidata", "wikidata")
     site.login()  # Log into Wikidata
-    print(f"Logged in to Wikidata as {site.username()}")
+    logger.info(f"Logged in to Wikidata as {site.username()}")
     return site
 
 
@@ -45,16 +50,15 @@ def get_article(site: pywikibot.Site, title: str) -> pywikibot.Page:
     return page
 
 
-def create_or_edit_article(
+def create_article(
     site: pywikibot.Site,
     title: str,
     content: str,
-    summary: str = "Edit via script",
+    summary: str = "Created via script",
     minor: bool = False,
-    overwrite_existing: bool = True,
 ) -> bool:
     """
-    Creates or edits a Wikipedia article.
+    Creates a new Wikipedia article.
 
     Parameters:
     - site: Pywikibot Site object for Wikipedia.
@@ -62,51 +66,99 @@ def create_or_edit_article(
     - content: Article content (wikitext)
     - summary: Edit summary
     - minor: Whether this is a minor edit
-    - overwrite_existing: Whether to overwrite if the page already exists
 
     Returns:
     - success: Boolean indicating success
     """
     try:
         page = get_article(site, title)
-        text = page.text
-        print(f"Current content of page '{title}': {text}")
 
-        with open("article_content.txt", "w") as f:
-            f.write(text)
-
-        # Check if the page exists
-        if page.exists() and not overwrite_existing:
-            print(
-                f"Page '{title}' already exists and overwrite_existing is False. Skipping."
+        # Check if the page already exists
+        if page.exists():
+            logger.warning(
+                f"Page '{title}' already exists. Use edit_article to modify it."
             )
             return False
 
         page.text = content
-        # page.save(summary=summary, minor=minor)  # Uncomment this to actually save
-        print(f"Successfully saved page: {title}")
+        page.save(summary=summary, minor=minor)
+        logger.info(f"Successfully created page: {title}")
         return True
     except Exception as e:
-        print(f"Error saving page {title}: {e}")
+        logger.error(f"Error creating page {title}: {e}")
+        return False
+
+
+def edit_article(
+    site: pywikibot.Site,
+    title: str,
+    content: str,
+    summary: str = "Edit via script",
+    minor: bool = False,
+) -> bool:
+    """
+    Edits an existing Wikipedia article.
+
+    Parameters:
+    - site: Pywikibot Site object for Wikipedia.
+    - title: Article title
+    - content: Article content (wikitext)
+    - summary: Edit summary
+    - minor: Whether this is a minor edit
+
+    Returns:
+    - success: Boolean indicating success
+    """
+    try:
+        page = get_article(site, title)
+
+        # Check if the page exists
+        if not page.exists():
+            logger.warning(
+                f"Page '{title}' does not exist. Use create_article to create it."
+            )
+            return False
+
+        text = page.text
+        logger.info(f"Current content of page '{title}': {text}")
+
+        with open("article_content.txt", "w") as f:
+            f.write(text)
+
+        page.text = content
+        page.save(summary=summary, minor=minor)
+        logger.info(f"Successfully edited page: {title}")
+        return True
+    except Exception as e:
+        logger.error(f"Error editing page {title}: {e}")
         return False
 
 
 if __name__ == "__main__":
     # Login to Wikipedia
-    site = login_to_wikipedia("en")
+    site = login_to_wikipedia("bo")
     # Login to Wikidata
     login_to_wikidata()
-    title = "Heart Sutra"
+    title = "ཨོཾ་ནི 123"
     content = """
-    {{
-    }}
+    ཨོཾ་ནི་ eited
     """
-    create_or_edit_article(
-        site,
-        title,
-        content,
-        summary="Created via script",
-        minor=True,
-        overwrite_existing=False,
-    )  # noqa: E501
-    print(f"Successfully created or edited article: {title}")
+    # Check if the article exists and decide whether to create or edit
+    page = get_article(site, title)
+    if page.exists():
+        edit_article(
+            site,
+            title,
+            content,
+            summary="Edited via script",
+            minor=True,
+        )
+    else:
+        create_article(
+            site,
+            title,
+            content,
+            summary="Created via script",
+            minor=True,
+        )
+    logger.info(f"Successfully created or edited article: {title}")

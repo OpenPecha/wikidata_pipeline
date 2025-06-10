@@ -9,6 +9,11 @@ from typing import Optional
 import pandas as pd
 import pywikibot
 
+from wiki_utils.utils.logger import get_logger
+
+# Initialize the logger
+logger = get_logger(__name__)
+
 # Configuration: Set these before running
 
 SITE_CODE = "mul"  # 'mul' is for multilingual Wikisource (wikisource.org)
@@ -68,7 +73,7 @@ def get_page_titles(index_title, site):
             page_dict = {k: ProofreadPage(site, v) for k, v in mapping.items()}
             return page_dict
         except (json.JSONDecodeError, OSError):
-            print(
+            logger.warning(
                 f"Cache file {cache_file} is invalid or empty. Deleting and refetching."
             )
             os.remove(cache_file)
@@ -76,7 +81,7 @@ def get_page_titles(index_title, site):
     # Otherwise, fetch from Wikisource and cache
     index = pywikibot.Page(site, index_title)
     if not index.exists():
-        print(f"Index page '{index_title}' does not exist.")
+        logger.error(f"Index page '{index_title}' does not exist.")
         return {}
     from pywikibot.proofreadpage import IndexPage
 
@@ -135,13 +140,13 @@ def upload_texts(site: pywikibot.Site, index_title: str, text_file_path: str) ->
     page_objs = get_page_titles(index_title, site)
     for page_no, text in page_texts.items():
         if page_no not in page_objs:
-            print(f"Page number {page_no} not found in index.")
+            logger.warning(f"Page number {page_no} not found in index.")
             log_upload_result(
                 index_title, page_no, "", "failure", "Page number not found in index"
             )
             continue
         page = page_objs[page_no]
-        print(f"Uploading text to {page.title()}...")
+        logger.info(f"Uploading text to {page.title()}...")
         try:
             # Wrap text in correct ProofreadPage format
             quality_tag = (
@@ -151,10 +156,10 @@ def upload_texts(site: pywikibot.Site, index_title: str, text_file_path: str) ->
             page.text = formatted_text
             page.proofread_page_quality = 3  # 3 = Proofread
             page.save(summary="Bot: Adding OCR/provided text and marking as proofread.")
-            print(f"Success: {page.title()}")
+            logger.info(f"Success: {page.title()}")
             log_upload_result(index_title, page_no, page.title(), "success")
         except Exception as e:
-            print(f"Error uploading {page.title()}: {e}")
+            logger.error(f"Error uploading {page.title()}: {e}")
             log_upload_result(index_title, page_no, page.title(), "failure", str(e))
 
 
@@ -173,9 +178,9 @@ def batch_upload_from_csv(
         index_title = row["Index"]
         text = row["text"]
         text_file_path = os.path.join(data_dir, text)
-        print(f"Processing: {index_title} with {text_file_path}")
+        logger.info(f"Processing: {index_title} with {text_file_path}")
         if not isinstance(index_title, str) or not isinstance(text_file_path, str):
-            print(f"Skipping row {i} due to missing data.")
+            logger.warning(f"Skipping row {i} due to missing data.")
             continue
         upload_texts(site, index_title, text_file_path)
 
@@ -183,4 +188,4 @@ def batch_upload_from_csv(
 if __name__ == "__main__":
     csv_file_path = "data/work_list.csv"  # Adjust path if needed
     batch_upload_from_csv(csv_file_path)
-    print("Done.")
+    logger.info("Done.")

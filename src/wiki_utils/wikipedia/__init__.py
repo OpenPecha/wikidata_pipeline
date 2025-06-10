@@ -1,1 +1,6 @@
-from .article_upload import create_or_edit_article, login_to_wikipedia
+from .article_upload import (
+    create_article,
+    edit_article,
+    get_article,
+    login_to_wikipedia,
+)
