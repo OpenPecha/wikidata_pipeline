@@ -4,7 +4,7 @@ import json
 import os
 import re
 from datetime import datetime
-from typing import Optional
+from typing import Dict, Optional
 
 import pandas as pd
 import pywikibot
@@ -20,8 +20,19 @@ SITE_CODE = "mul"  # 'mul' is for multilingual Wikisource (wikisource.org)
 FAMILY = "wikisource"  # Do not change unless using a non-standard Wikisource
 
 
+def login_to_wikisource() -> pywikibot.Site:
+    """
+    Logs in to Wikisource using Pywikibot.
+    Returns:
+    - site: Pywikibot Site object for Wikisource.
+    """
+    site = pywikibot.Site(SITE_CODE, FAMILY)
+    site.login()  # Log into Wikisource
+    return site
+
+
 # --- Helper Functions ---
-def parse_text_file(text_file_path):
+def parse_text_file(text_file_path: str) -> Dict[str, str]:
     """
     Parse the text file into a dict: {page_number: text}
     Assumes format:
@@ -53,7 +64,9 @@ def parse_text_file(text_file_path):
     return page_texts
 
 
-def get_page_titles(index_title, site):
+def get_page_titles(
+    index_title: str, site: pywikibot.Site
+) -> Dict[str, "pywikibot.proofreadpage.ProofreadPage"]:
     """
     Returns a dict of {page_number: ProofreadPage object}.
     Caches the mapping {page_number: page_title} in a local file for faster reuse.
@@ -170,8 +183,7 @@ def batch_upload_from_csv(
 ) -> None:
     """Upload texts for all entries in a CSV file"""
     if site is None:
-        site = pywikibot.Site(SITE_CODE, FAMILY)
-        site.login()
+        site = login_to_wikisource()
 
     df = pd.read_csv(csv_file_path)
     for i, row in df.iterrows():

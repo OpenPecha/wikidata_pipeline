@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from wiki_utils.wikicommons.batch_upload import (
+from wiki_utils.wikicommons.upload import (
     assign_categories,
     assign_license,
     login_to_commons,
@@ -35,7 +35,7 @@ class TestBatchUpload(unittest.TestCase):
     @patch(
         "pywikibot.specialbots.UploadRobot.__init__", return_value=None
     )  # prevents constructor from doing anything
-    @patch("wiki_utils.wikicommons.batch_upload.login_to_commons")
+    @patch("wiki_utils.wikicommons.upload.login_to_commons")
     def test_upload_image_using_uploadrobot(self, mock_login, mock_init, mock_run):
         mock_site = MagicMock()
         mock_login.return_value = mock_site

@@ -1,9 +1,24 @@
 import json
+from typing import Any, Dict, List, Optional
 
+import pywikibot
 import requests
 
 
-def get_qid(work_id):
+def login_to_wikidata() -> pywikibot.Site:
+    """
+    Logs in to Wikidata using Pywikibot.
+
+    Returns:
+    - site: Pywikibot Site object for Wikidata.
+    """
+    site = pywikibot.Site("wikidata", "wikidata")
+    site.login()  # Log into Wikidata
+    print(f"Logged in to Wikidata as {site.username()}")
+    return site
+
+
+def get_qid(work_id: str) -> Optional[str]:
     """
     Returns the Wikidata QID for a given BDRC work_id.
     If not found, returns None.
@@ -39,7 +54,7 @@ def get_qid(work_id):
     return None
 
 
-def get_wikidata_entity(qid):
+def get_wikidata_entity(qid: str) -> Optional[Dict[str, Any]]:
     """
     Returns the Wikidata entity data for a given QID.
     If not found, returns None.
@@ -62,7 +77,12 @@ def get_wikidata_entity(qid):
         return None
 
 
-def extract_useful_fields_from_entity(entity_json, qid, language="en", properties=None):
+def extract_useful_fields_from_entity(
+    entity_json: Dict[str, Any],
+    qid: str,
+    language: str = "en",
+    properties: Optional[List[str]] = None,
+) -> Dict[str, Any]:
     """
     Extracts label, description, aliases, and specified property values from Wikidata entity JSON.
     Handles missing fields gracefully.
@@ -101,7 +121,9 @@ def extract_useful_fields_from_entity(entity_json, qid, language="en", propertie
         return {"qid": qid, "label": "", "description": "", "aliases": []}
 
 
-def get_wikidata_metadata(work_id, language="en", properties=None):
+def get_wikidata_metadata(
+    work_id: str, language: str = "en", properties: Optional[List[str]] = None
+) -> Optional[Dict[str, Any]]:
     """
     Combines the above functions to return useful metadata for a BDRC work_id.
     Returns None if not found or on error.
@@ -117,7 +139,7 @@ def get_wikidata_metadata(work_id, language="en", properties=None):
     return extract_useful_fields_from_entity(entity, qid, language, properties)
 
 
-def main():
+if __name__ == "__main__":
     work_id = "WA0RK0529"
     metadata = get_wikidata_metadata(
         work_id, language="en", properties=["P31", "P4969", "P1476"]
@@ -128,7 +150,3 @@ def main():
         author_id, language="en", properties=["P31", "P4969", "P1476"]
     )
     print(json.dumps(author_metadata, indent=2, ensure_ascii=False))
-
-
-if __name__ == "__main__":
-    main()

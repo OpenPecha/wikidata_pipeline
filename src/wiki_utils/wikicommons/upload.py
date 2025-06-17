@@ -1,8 +1,12 @@
+import json
+import os
+from typing import Any, Dict, List, Optional
+
 import pywikibot
 from pywikibot.specialbots import UploadRobot
 
 
-def login_to_commons():
+def login_to_commons() -> pywikibot.Site:
     """
     Logs in to Wikimedia Commons using Pywikibot.
     Returns:
@@ -14,8 +18,11 @@ def login_to_commons():
 
 
 def upload_image_using_uploadrobot(
-    image_path, image_title, description_text, site=None
-):
+    image_path: str,
+    image_title: str,
+    description_text: str,
+    site: Optional[pywikibot.Site] = None,
+) -> pywikibot.Site:
     """
     Uploads the image to Wikimedia Commons using UploadRobot, with description verification.
 
@@ -54,7 +61,9 @@ def upload_image_using_uploadrobot(
     return site
 
 
-def assign_caption(site, file_title, captions):
+def assign_caption(
+    site: pywikibot.Site, file_title: str, captions: Dict[str, str]
+) -> bool:
     """
     Assigns captions to a file on Wikimedia Commons in multiple languages by editing the Wikibase item.
 
@@ -88,7 +97,12 @@ def assign_caption(site, file_title, captions):
         return False
 
 
-def assign_license(site, file_title, license_text, summary="Script: Setting license"):
+def assign_license(
+    site: pywikibot.Site,
+    file_title: str,
+    license_text: str,
+    summary: str = "Script: Setting license",
+) -> bool:
     """
     Assigns the license to a file page on Wikimedia Commons by editing the page content.
 
@@ -140,8 +154,11 @@ def assign_license(site, file_title, license_text, summary="Script: Setting lice
 
 
 def assign_categories(
-    site, file_title, categories, summary="Script: Adding categories"
-):
+    site: pywikibot.Site,
+    file_title: str,
+    categories: List[str],
+    summary: str = "Script: Adding categories",
+) -> bool:
     """
     Assigns categories to a file page on Wikimedia Commons.
 
@@ -192,7 +209,7 @@ def assign_categories(
         return False
 
 
-def batch_upload_images(images_to_upload):
+def batch_upload_images(images_to_upload: List[Dict[str, Any]]) -> None:
     """
     Uploads multiple images to Wikimedia Commons with individual metadata.
 
@@ -243,7 +260,7 @@ def batch_upload_images(images_to_upload):
             print(f"Failed to process {img['image_title']}: {e}")
 
 
-def load_images_from_json(json_file_path):
+def load_images_from_json(json_file_path: str) -> List[Dict[str, Any]]:
     """
     Load image upload configurations from a JSON file.
 
@@ -253,8 +270,6 @@ def load_images_from_json(json_file_path):
     Returns:
     - List of dictionaries with image upload configurations formatted for upload
     """
-    import json
-    import os
 
     if not os.path.exists(json_file_path):
         print(f"Error: JSON file not found: {json_file_path}")
