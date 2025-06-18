@@ -1,8 +1,24 @@
+import csv
+import logging
 import re
+from urllib.parse import unquote
 
 import pywikibot
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
 
-from wiki_utils.utils.logger import get_logger
+# from wiki_utils.utils.logger import get_logger
+
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
+
+
+def get_logger(name):
+    return logging.getLogger(name)
+
 
 # Initialize the logger
 logger = get_logger(__name__)
@@ -78,8 +94,29 @@ def format_page_orientation(index_title, site=None, dry_run=False):
     :param site: pywikibot.Site object for bo.wikisource
     :param dry_run: If True, do not actually save the page
     """
+
     if site is None:
         site = pywikibot.Site("mul", "wikisource")
+
+    # added this part of code so to check if the main page already exists then no need to modify the pages again.
+    # NOTICE: If you still want to make changes due to some reason, you can comment out this part of code.
+
+    _, base_title_no_ext, _, _, _ = get_base_info(site, index_title)
+    main_title = base_title_no_ext
+    main_page = pywikibot.Page(site, main_title)
+
+    if main_page.exists():
+        logger.info(
+            f"Main page '{main_title}' already exists so no modifications of pages."
+        )
+        # Print a prominent, colored, bordered message for terminal visibility
+        border = "\033[95m" + "\n" + "=" * 70 + "\033[0m"  # Magenta border
+        message = f"\033[93m\n⚠️  Main page '{main_title}' already exists. No modifications of pages.\033[0m"
+        print(border)
+        print(message)
+        print(border)
+        print("\n")
+        return
 
     # --- Step 1: Check if Index page exists and process each page ---
     index_page = pywikibot.Page(site, index_title)
@@ -150,14 +187,15 @@ def create_main_page(
     """
     Create a mainspace page for a given Index page using <pages> tag for transclusion.
 
-    :param index_title: Title of the Index page, e.g., "Index:SomeBook.pdf"
-    :param main_title: Title for the main namespace page. If None, derived from index_title
-    :param from_page: First page to include (default: 1)
-    :param to_page: Last page to include (default: None, will use last available page)
-    :param site: pywikibot.Site object for wikisource
+    :param index_title: "Index:SomeBook.pdf"
+    :param main_title: "SomeBook"
+    :param from_page: (default: 1)
+    :param to_page: (default: None, will use last available page)
+    :param site: pywikibot.Site
     :param dry_run: If True, do not actually save the page
     :return: The created main page object
     """
+
     if site is None:
         site = pywikibot.Site("mul", "wikisource")
 
@@ -188,21 +226,97 @@ def create_main_page(
 
     # Create the actual content with <pages> tag
     # The index attribute should not include the "Index:" prefix
-    content = f'<pages index="{base_title}" from={from_page} to={to_page} />'
+    # content = f'<pages index="{base_title}" from={from_page} to={to_page} />'
+    content = (
+        f'<pages index="{index_title[len("Index:"):]}" from={from_page} to={to_page} />'
+    )
 
     # Create or update the main page
     main_page = pywikibot.Page(site, main_title)
+
+    if main_page.exists():
+        print(f"Main page '{main_title}' already exists.")
+        return
 
     if not dry_run:
         main_page.text = content
         main_page.save(summary="Bot: Creating mainspace transclusion of Index pages")
         logger.info(f"Mainspace page created: {main_title}")
 
-    return main_page
+    return
+
+
+def get_wikisource_links(
+    sheet_id,
+    creds_path,
+    range="ལས་ཀ་དངོས་གཞི།!H3:J10",
+    output_file="wikisource_links.csv",
+):
+    """
+    Extracts hyperlinks from 'Wikisource Link' column (H) if corresponding 'Proofreading statue' column (J)
+    is 'ཞུ་དག་བྱས་ཟིན།'.
+
+    Args:
+        sheet_id (str): Google Sheet ID
+        creds_path (str): Path to service account JSON credentials
+        range (str): Range including both H and J columns
+        output_file (str): Where to save the extracted URLs
+
+    Returns:
+        List of filtered URLs
+    """
+
+    target_status = "ཞུ་དག་བྱས་ཟིན།"
+
+    creds = service_account.Credentials.from_service_account_file(
+        creds_path, scopes=["https://www.googleapis.com/auth/spreadsheets.readonly"]
+    )
+    service = build("sheets", "v4", credentials=creds)
+    sheet = service.spreadsheets()
+
+    result = sheet.get(
+        spreadsheetId=sheet_id, ranges=[range], includeGridData=True
+    ).execute()
+
+    rows = result["sheets"][0]["data"][0]["rowData"]
+    links = []
+
+    for row in rows:
+        try:
+            link_cell = row["values"][0]  # Column H
+            status_cell = row["values"][2].get("formattedValue", "")  # Column J
+
+            if status_cell.strip() == target_status and "hyperlink" in link_cell:
+                links.append(link_cell["hyperlink"])
+        except (KeyError, IndexError):
+            continue
+
+    # Save to CSV
+    with open(output_file, mode="w", newline="", encoding="utf-8") as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(["Wikisource Link"])
+        for link in links:
+            writer.writerow([link])
+
+    print(f"✅ {len(links)} links saved to '{output_file}'.")
+
+    return links
 
 
 if __name__ == "__main__":
-    index_title = "Index:སྙན་བརྒྱུད་ཁྲིད་ཆེན་བཅུ་གསུམ་གྱི་སྐོར། པོད། ༡.pdf"
-    format_page_orientation(index_title)
-    main_title = "སྙན་བརྒྱུད་ཁྲིད་ཆེན་བཅུ་གསུམ་གྱི་སྐོར། པོད། ༡"
-    create_main_page(main_title)
+    SPREADSHEET_ID = "1PM9H3gDJ02Rbt_vz0uKDCOh2LB_ibjb-WMtq_e-02bk"
+    CREDS_PATH = "my-credentials.json"
+
+    valid_links = get_wikisource_links(SPREADSHEET_ID, CREDS_PATH)
+    print("Links Received")
+
+    for link in valid_links:
+        if link and "/wiki/" in link:
+            # Extract everything after '/wiki/' and decode URL encoding
+            index_title = unquote(link.split("/wiki/")[-1])
+            print(f"Processing: {index_title}")
+            format_page_orientation(index_title)
+            create_main_page(index_title)
+            print("\n\n✅✅✅✅✅ ONTO NEXT ONE ✅✅✅✅✅\n\n")
+
+    print("✅ All transclusions completed.")
